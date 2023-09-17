@@ -2,12 +2,12 @@ import React, { useRef, useState, useEffect } from 'react'
 
 export const useCanvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [mouse, setMouse] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
+  const [mouseDown, setMouseDown] = useState(false)
   const [particles, setParticles] = useState<Particle[]>([])
   let radians = 0
+  let alpha = 1
 
   const colors: string[] = ['#2185C5', '#7ECEFD', '#FFF6E5', '#FF7F66']
- 
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -19,21 +19,25 @@ export const useCanvas = () => {
     canvas.width = innerWidth
     canvas.height = innerHeight
 
-    const handleMouseMove = (event: MouseEvent) => {
-      setMouse({ x: event.clientX, y: event.clientY })
-    }
-
     const handleResize = () => {
       canvas.width = innerWidth
       canvas.height = innerHeight
       init()
     }
+    const handleMouseDown = () => {
+      setMouseDown(true)
+    }
+    const handleMouseUp = () => {
+      setMouseDown(false)
+    }
 
-    canvas.addEventListener('mousemove', handleMouseMove)
+    canvas.addEventListener('mousedown', handleMouseDown)
+    canvas.addEventListener('mouseup', handleMouseUp)
     canvas.addEventListener('resize', handleResize)
 
     return () => {
-      canvas.removeEventListener('mousemove', handleMouseMove)
+      canvas.removeEventListener('mousedown', handleMouseDown)
+      canvas.removeEventListener('mouseup', handleMouseUp)
       canvas.removeEventListener('resize', handleResize)
     }
   }, [])
@@ -91,15 +95,13 @@ export const useCanvas = () => {
     requestAnimationFrame(animate)
     const ctx = canvasRef.current?.getContext('2d')
     if (!ctx) return
-    ctx.fillStyle = `rgba(10,10,10,1)`
+    ctx.fillStyle = `rgba(10,10,10,${alpha})`
     ctx.clearRect(
       0,
       0,
       canvasRef.current?.width || 0,
       canvasRef.current?.height || 0,
     )
-
-    ctx.fillText('HTML CANVAS BOILERPLATE', mouse.x, mouse.y)
 
     ctx.save()
     ctx.translate(canvas.width / 2, canvas.height / 2)
@@ -109,12 +111,17 @@ export const useCanvas = () => {
     })
     ctx.restore()
 
-    radians += 0.001
+    radians += 0.005
+    if (mouseDown && alpha >= 0.1) {
+      alpha -= 0.01
+    } else if (!mouseDown && alpha < 1) {
+      alpha += 0.01
+    }
   }
 
   useEffect(() => {
     animate()
-  }, [particles, mouse])
+  }, [particles, mouseDown])
 
   return { canvasRef }
 }

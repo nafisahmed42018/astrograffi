@@ -7,7 +7,7 @@ const StarTrail = () => {
   const { canvasRef } = useCanvas()
   return (
     <div className="flex items-center justify-center h-[100vh] w-[100vw]">
-      <canvas ref={canvasRef} className="bg-white" />
+      <canvas ref={canvasRef}  />
     </div>
   )
 }
